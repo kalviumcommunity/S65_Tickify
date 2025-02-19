@@ -152,8 +152,8 @@ Tickify ✅ isn’t just another checklist app—it’s a **fun and smart way to
 
 ### Deployment Link for backend :
 
-## https://s65-tickify.onrender.com
+## https://s65-tickify.onrender.com/
 
 ### Deployment Link for frontend :
 
-## s65-tickify.vercel.app
+## https://s65-tickify.vercel.app/
