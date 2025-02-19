@@ -147,13 +147,13 @@ Once both the backend and frontend servers are running:
 
 ---
 
+## 🚀 Deployment Links  
+
+- **Backend:** [Tickify Backend](https://s65-tickify.onrender.com/)  
+- **Frontend:** [Tickify Frontend](https://s65-tickify.vercel.app/)  
+
+---
+
+
 Tickify ✅ isn’t just another checklist app—it’s a **fun and smart way to stay organized!** 🚀
 
-
-### Deployment Link for backend :
-
-## https://s65-tickify.onrender.com/
-
-### Deployment Link for frontend :
-
-## https://s65-tickify.vercel.app/
