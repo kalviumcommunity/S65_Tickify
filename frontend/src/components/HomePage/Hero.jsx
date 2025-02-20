@@ -14,7 +14,7 @@ const Hero = ({ isDarkMode }) => {
       >
         <motion.h1
           className="text-5xl md:text-7xl font-extrabold mb-6 drop-shadow-lg ml-[140px]"
-          animate={{ y: [0, -10, 0] }}
+          animate={{ y: [0, -5, 0] }}
           transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
         >
           Never Forget Again! 🚀
@@ -27,7 +27,11 @@ const Hero = ({ isDarkMode }) => {
 
         <div className="flex space-x-4">
           <motion.button
-            className="bg-white text-purple-700 font-bold px-8 py-3 rounded-full hover:bg-gray-200 transition duration-300 shadow-lg"
+            className={`bg-white ${
+              isDarkMode ? "text-purple-700" : "text-black"
+            } font-bold px-8 py-3 rounded-full hover:bg-gray-200 transition duration-300 shadow-lg ${
+              isDarkMode ? "hover:text-black" : ""
+            }`}
             whileHover={{ scale: 1.1 }}
           >
             Get Started

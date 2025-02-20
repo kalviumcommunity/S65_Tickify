@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import LandingPage from './LandingPage';
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import {
@@ -15,7 +14,6 @@ import {
   List,
 } from "react-feather";
 import "./logoName.css";
-
 
 const Navbar = ({ isDarkMode, toggleDarkMode }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
