@@ -1,8 +1,11 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import "./logoName.css";
 
 const Hero = ({ isDarkMode }) => {
+  const navigate = useNavigate(); // Initialize useNavigate
+
   return (
     <div className="relative bg-gradient-to-r from-blue-500 via-purple-600 to-rose-500 text-white">
       {/* Main Hero Content */}
@@ -33,6 +36,7 @@ const Hero = ({ isDarkMode }) => {
               isDarkMode ? "hover:text-black" : ""
             }`}
             whileHover={{ scale: 1.1 }}
+            onClick={() => navigate("/checklist")} // Navigate to ChecklistPage
           >
             Get Started
           </motion.button>

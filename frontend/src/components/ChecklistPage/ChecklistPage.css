@@ -1,0 +1,63 @@
+/* Custom Input Box */
+.custom-input {
+    border-radius: 12px;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .custom-input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+  }
+  
+  /* Custom Add Button */
+  .custom-add-button {
+    border-radius: 12px;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .custom-add-button:hover {
+    transform: translateY(-2px);
+  }
+  
+  /* Hover effect for input and button */
+  .motion-hover {
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .motion-hover:hover {
+    transform: scale(1.02);
+  }
+  
+  /* Add spacing around the input box and checklist items */
+  .input-container {
+    margin-bottom: 2rem; /* Add space below the input box */
+  }
+  
+  .checklist-items-container {
+    margin-top: 1.5rem; /* Add space above the checklist items */
+  }
+
+  /* Gradient Container */
+.gradient-container {
+    background: linear-gradient(to right, #3b82f6, #9333ea, #f43f5e);
+    backdrop-filter: blur(10px);
+  }
+  
+  /* Input Box */
+  .custom-input {
+    border-radius: 12px;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .custom-input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+  }
+  
+  /* Add Button */
+  .custom-add-button {
+    border-radius: 12px;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .custom-add-button:hover {
+    transform: translateY(-2px);
+  }

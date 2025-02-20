@@ -1,31 +1,37 @@
-const express = require('express');
-const connectDB = require('./config/db');
-const userRoute = require('./routes/userRoute')
+const express = require("express");
+const cors = require("cors");
+const connectDB = require("./config/db");
+require("dotenv").config();
+
+const userRoutes = require("./routes/userRoute");
+const checklistRoutes = require("./routes/checklistRoutes"); // Fixed naming
+
 const app = express();
-require('dotenv').config()
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 5000;
 
+// Middleware
+app.use(express.json());
+app.use(cors()); // Enable CORS for frontend communication
 
-app.use(express.json())
+// Routes
+app.use("/api/users", userRoutes);
+app.use("/api/checklists", checklistRoutes); // Add Checklist API
 
-app.use("/api/users", userRoute)
-
-app.get('/', (req, res) => {
-  try {
-    return res.status(200).send("Backend is running Successfully...")
-  } catch (err) {
-    return res.status(500).send(err.message)
-  }
-})
-
-
-
-app.listen(PORT, () => {
-  try {
-    connectDB()
-    console.log(`Server is running on http://localhost:${PORT}`);
-  } catch (err) {
-    console.error("Server failed to start!", err.message)
-  }
-  
+// Root Route
+app.get("/", (req, res) => {
+  res.status(200).send("Backend is running Successfully...");
 });
+
+// Start Server with DB Connection
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Server failed to start:", error.message);
+  }
+};
+
+startServer();
