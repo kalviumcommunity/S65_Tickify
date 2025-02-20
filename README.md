@@ -154,5 +154,7 @@ Once both the backend and frontend servers are running:
 
 ---
 
-
 Tickify ✅ isn’t just another checklist app—it’s a **fun and smart way to stay organized!** 🚀
+
+
+
