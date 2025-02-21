@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import LandingPage from "./components/HomePage/LandingPage";
 import ChecklistPage from "./components/ChecklistPage/ChecklistPage";
+import HighPriorityPage from "./components/PriorityLabels/HighPriorityPage";
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -24,6 +25,9 @@ function App() {
         path="/checklist"
         element={<ChecklistPage isDarkMode={isDarkMode} />}
       />
+      <Route 
+      path="/high-priority" 
+      element={<HighPriorityPage isDarkMode={isDarkMode}/>} /> 
     </Routes>
   );
 }

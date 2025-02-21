@@ -12,6 +12,13 @@ const features = [
     link: "/checklist",
   },
   {
+    icon: <List className="w-8 h-8 text-white" />,
+    title: "Priority Labels",
+    description: "Mark items as high or low priority for better organization",
+    link: "/high-priority",
+
+  },
+  {
     icon: <Smile className="w-8 h-8 text-white" />,
     title: "Funny Smart Suggestions",
     description: "Get quirky daily suggestions to lighten your day",
@@ -26,11 +33,6 @@ const features = [
     title: "List Sharing",
     description:
       "Share your lists with friends and family for better coordination",
-  },
-  {
-    icon: <List className="w-8 h-8 text-white" />,
-    title: "Priority Labels",
-    description: "Mark items as high or low priority for better organization",
   },
   {
     icon: <Heart className="w-8 h-8 text-white" />,
