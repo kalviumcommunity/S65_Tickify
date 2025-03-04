@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Menu,
   User,
@@ -16,10 +17,13 @@ import {
 import "./logoName.css";
 
 const Navbar = ({ isDarkMode, toggleDarkMode }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
-  
+  const [showNewChecklistInput, setShowNewChecklistInput] = useState(false);
+  const [newItem, setNewItem] = useState("");
 
   const randomReminders = [
     "Don't forget your keys! 🗝️",
@@ -31,8 +35,36 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
 
   const handleSignUp = () => toast.success("Welcome to Tickify! 🎉");
   const handleSignIn = () => toast.success("Welcome back to Tickify! 😊");
-  const handleCreateChecklist = () =>
-    toast.success("Checklist Added! Stay on track! 🚀");
+
+  const handleCreateChecklist = () => {
+    setShowNewChecklistInput(true);
+  };
+
+  const handleAddItem = () => {
+    if (!newItem.trim()) {
+      toast.error("Please enter a task!");
+      return;
+    }
+
+    const newItemObj = { text: newItem, completed: false, priority: "low" };
+
+    fetch("http://localhost:5000/api/checklists/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newItemObj),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        toast.success("Checklist Added! Stay on track! 🚀");
+        setNewItem("");
+        setShowNewChecklistInput(false);
+        navigate("/checklist");
+      })
+      .catch((error) => {
+        console.error("Error adding item:", error);
+        toast.error("Failed to add checklist item. Please try again.");
+      });
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -47,10 +79,14 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
     toast.success(reminder);
   };
 
-
-
+  // Add toast message when toggling dark/light mode
+  const handleToggleDarkMode = () => {
+    toggleDarkMode(); // Call the original toggle function
+    toast.success(`Switched to ${isDarkMode ? "Light" : "Dark"} Mode!`);
+  };
 
   const textColor = isDarkMode ? "text-gray-200" : "text-gray-950";
+  const isChecklistPage = location.pathname === "/checklist";
 
   return (
     <motion.nav
@@ -111,6 +147,17 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
                   </a>
                 </li>
                 <li>
+                  <button
+                    onClick={() => {
+                      navigate("/high-priority");
+                      setIsDropdownOpen(false);
+                    }}
+                    className="flex items-center px-4 py-2 hover:bg-gray-800 w-full"
+                  >
+                    <List className="w-5 h-5 mr-2 text-gray-400" /> High Priority
+                  </button>
+                </li>
+                <li>
                   <a
                     href="#logout"
                     className="flex items-center px-4 py-2 hover:bg-gray-800"
@@ -159,14 +206,49 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
 
       {/* Right Side: Buttons */}
       <div className="flex space-x-4 items-center">
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={handleCreateChecklist}
-          className="bg-purple-600 text-white font-bold px-6 py-2 rounded-full hover:bg-purple-700 transition duration-300"
-        >
-          <PlusCircle className="w-5 h-5 inline mr-1" /> Create Checklist
-        </motion.button>
+        {/* Conditionally render the "Create Checklist" button */}
+        {!isChecklistPage && (
+          <>
+            {showNewChecklistInput ? (
+              <motion.div
+                className="flex items-center gap-3"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <motion.input
+                  type="text"
+                  value={newItem}
+                  onChange={(e) => setNewItem(e.target.value)}
+                  className={`flex-grow p-3 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ${
+                    isDarkMode
+                      ? "bg-gray-800 text-white border-white/30 focus:border-white/100"
+                      : "bg-white text-black border-black/30 focus:border-black/100"
+                  }`}
+                  placeholder="Add a new task..."
+                  whileHover={{ scale: 1.02 }}
+                />
+                <motion.button
+                  onClick={handleAddItem}
+                  className="px-6 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-300 shadow-lg hover:shadow-xl"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  ➕ Add
+                </motion.button>
+              </motion.div>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={handleCreateChecklist}
+                className="bg-purple-600 text-white font-bold px-6 py-2 rounded-full hover:bg-purple-700 transition duration-300"
+              >
+                <PlusCircle className="w-5 h-5 inline mr-1" /> Create Checklist
+              </motion.button>
+            )}
+          </>
+        )}
 
         {/* Sign In / Sign Up Buttons */}
         <motion.button
@@ -193,7 +275,7 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          onClick={toggleDarkMode}
+          onClick={handleToggleDarkMode} // Use the new handler
           className={`p-2 rounded-full transition ${
             isDarkMode ? "text-white hover:bg-gray-800" : "text-gray-950 hover:bg-gray-200"
           }`}
@@ -216,6 +298,7 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
+          onClick={() => navigate("/high-priority")}
           className={`p-2 rounded-full transition ${
             isDarkMode ? "text-white hover:bg-gray-800" : "text-gray-950 hover:bg-gray-200"
           }`}

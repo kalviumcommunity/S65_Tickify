@@ -1,20 +1,25 @@
 import React, { useState, useEffect } from "react";
 import ChecklistItem from "../ChecklistItem/ChecklistItem";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import ShareList from "../SharePage/ShareList";
 import "./ChecklistPage.css";
+import Navbar from "../HomePage/Navbar";
+import toast from "react-hot-toast";
 
-const ChecklistPage = ({ isDarkMode }) => {
+const ChecklistPage = ({ isDarkMode, toggleDarkMode }) => {
+  const location = useLocation();
   const [checklist, setChecklist] = useState([]);
   const [newItem, setNewItem] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [editingItemId, setEditingItemId] = useState(null); // Track which item is being edited
-  const [editedText, setEditedText] = useState(""); // Store the edited text
+  const [editingItemId, setEditingItemId] = useState(null);
+  const [editedText, setEditedText] = useState("");
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Fetch checklist from backend
   useEffect(() => {
-    fetch("http://localhost:5000/api/checklists/get")
+    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/get`)
       .then((res) => res.json())
       .then((data) => {
         console.log("Fetched Checklists:", data);
@@ -30,26 +35,33 @@ const ChecklistPage = ({ isDarkMode }) => {
 
   // Add a new item
   const handleAddItem = () => {
-    if (!newItem.trim()) return;
+    if (!newItem.trim()) {
+      toast.error("Please enter a task!");
+      return;
+    }
 
     const newItemObj = { text: newItem, completed: false, priority: "low" };
 
-    fetch("http://localhost:5000/api/checklists/add", {
+    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/add`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newItemObj),
     })
       .then((res) => res.json())
       .then((data) => {
+        toast.success("Checklist Added! Stay on track! 🚀");
         setChecklist([...checklist, data]);
-        setNewItem(""); // Clear input after adding
+        setNewItem("");
       })
-      .catch((error) => console.error("Error adding item:", error));
+      .catch((error) => {
+        console.error("Error adding item:", error);
+        toast.error("Failed to add checklist item. Please try again.");
+      });
   };
 
   // Toggle completion status
   const handleToggleComplete = (id, completed) => {
-    fetch(`http://localhost:5000/api/checklists/update/${id}`, {
+    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/update/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ completed: !completed }),
@@ -59,13 +71,19 @@ const ChecklistPage = ({ isDarkMode }) => {
         setChecklist((prev) =>
           prev.map((item) => (item._id === id ? updatedItem : item))
         );
+        toast.success(
+          `Task marked as ${!completed ? "completed" : "incomplete"}! ✅`
+        );
       })
-      .catch((error) => console.error("Error updating item:", error));
+      .catch((error) => {
+        console.error("Error updating item:", error);
+        toast.error("Failed to update task status. Please try again.");
+      });
   };
 
   // Set priority
   const handleSetPriority = (id, priority) => {
-    fetch(`http://localhost:5000/api/checklists/update/${id}`, {
+    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/update/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ priority }),
@@ -75,32 +93,44 @@ const ChecklistPage = ({ isDarkMode }) => {
         setChecklist((prev) =>
           prev.map((item) => (item._id === id ? updatedItem : item))
         );
+        toast.success(`Priority set to ${priority}! ⚡`);
       })
-      .catch((error) => console.error("Error updating priority:", error));
+      .catch((error) => {
+        console.error("Error updating priority:", error);
+        toast.error("Failed to update priority. Please try again.");
+      });
   };
 
   // Delete item
   const handleDeleteItem = (id) => {
-    fetch(`http://localhost:5000/api/checklists/delete/${id}`, {
+    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/delete/${id}`, {
       method: "DELETE",
     })
       .then(() => {
         setChecklist((prev) => prev.filter((item) => item._id !== id));
+        toast.success("Task deleted successfully! 🗑️");
       })
-      .catch((error) => console.error("Error deleting item:", error));
+      .catch((error) => {
+        console.error("Error deleting item:", error);
+        toast.error("Failed to delete task. Please try again.");
+      });
   };
 
   // Edit item
   const handleEditItem = (id, text) => {
-    setEditingItemId(id); // Set the item being edited
-    setEditedText(text); // Set the current text for editing
+    setEditingItemId(id);
+    setEditedText(text);
+    toast.success("Editing task... ✏️");
   };
 
   // Save edited item
   const handleSaveEdit = (id) => {
-    if (!editedText.trim()) return;
+    if (!editedText.trim()) {
+      toast.error("Please enter a task!");
+      return;
+    }
 
-    fetch(`http://localhost:5000/api/checklists/update/${id}`, {
+    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/update/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: editedText }),
@@ -110,19 +140,44 @@ const ChecklistPage = ({ isDarkMode }) => {
         setChecklist((prev) =>
           prev.map((item) => (item._id === id ? updatedItem : item))
         );
-        setEditingItemId(null); // Exit edit mode
-        setEditedText(""); // Clear the edited text
+        setEditingItemId(null);
+        setEditedText("");
+        toast.success("Task updated successfully! ✅");
       })
-      .catch((error) => console.error("Error updating item text:", error));
+      .catch((error) => {
+        console.error("Error updating item text:", error);
+        toast.error("Failed to update task. Please try again.");
+      });
   };
+
+  // Open Share Modal
+  const handleOpenShareModal = () => {
+    setIsShareModalOpen(true);
+    toast.success("Opening Share Options... 📤");
+  };
+
+  // Close Share Modal
+  const handleCloseShareModal = () => {
+    setIsShareModalOpen(false);
+  };
+
+  // Handle new item from Navbar
+  useEffect(() => {
+    if (location.state?.newItem) {
+      setNewItem(location.state.newItem);
+      handleAddItem();
+    }
+  }, [location.state]);
 
   return (
     <div
       className={`min-h-screen p-8 transition-all duration-300 ${
-        isDarkMode ? "bg-gray-950 text-white" : "bg-gray-50 text-gray-900"
+        isDarkMode ? "bg-gray-950 text-white" : "bg-white text-gray-900"
       }`}
     >
-      <div className="max-w-4xl mx-auto">
+      <Navbar isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+      <div className="max-w-4xl mx-auto p-8 mt-20">
+        {/* Main Content */}
         <h1 className="text-4xl font-bold text-center mb-10 bg-gradient-to-r from-blue-500 via-purple-600 to-rose-500 bg-clip-text text-transparent">
           Your Customizable Checklist
         </h1>
@@ -178,26 +233,43 @@ const ChecklistPage = ({ isDarkMode }) => {
                   )
                 }
                 onDelete={() => handleDeleteItem(item._id)}
-                onEdit={() => handleEditItem(item._id, item.text)} // Pass edit handler
-                isEditing={editingItemId === item._id} // Check if this item is being edited
+                onEdit={() => handleEditItem(item._id, item.text)}
+                isEditing={editingItemId === item._id}
                 editedText={editedText}
-                onTextChange={(e) => setEditedText(e.target.value)} // Handle text change
-                onSaveEdit={() => handleSaveEdit(item._id)} // Save edited text
+                onTextChange={(e) => setEditedText(e.target.value)}
+                onSaveEdit={() => handleSaveEdit(item._id)}
               />
             ))}
           </motion.div>
         )}
 
-        {/* Back to Home Button */}
-        <div className="flex justify-center mt-10">
+        {/* Buttons Container */}
+        <div className="flex justify-between mt-10">
+          {/* Back to Home Button */}
           <Link
             to="/"
+            onClick={() => toast.success("Returning back to Home! 🏠")}
             className="inline-block px-6 py-3 text-white text-lg font-semibold rounded-full bg-gradient-to-r from-blue-500 via-purple-600 to-rose-500 hover:opacity-90 shadow-lg transform hover:scale-105 transition duration-300"
           >
             ⬅️ Back to Home
           </Link>
+
+          {/* Share Checklist Button */}
+          <button
+            onClick={handleOpenShareModal}
+            className="inline-block px-6 py-3 text-white text-lg font-semibold rounded-full bg-gradient-to-r from-blue-500 via-purple-600 to-rose-500 hover:opacity-90 shadow-lg transform hover:scale-105 transition duration-300"
+          >
+            📤 Share Checklist
+          </button>
         </div>
       </div>
+
+      {/* ShareList Modal */}
+      <ShareList
+        isOpen={isShareModalOpen}
+        onClose={handleCloseShareModal}
+        checklist={checklist}
+      />
     </div>
   );
 };
