@@ -129,6 +129,17 @@ Once both the backend and frontend servers are running:
 
 ---
 
+## ⚙️ Tools and Integrations :
+• **Speedtest API** (or a similar tool) to capture real-time internet speed data
+
+• **Postman** for API testing.
+
+• **OAuth** (optional) for user authentication.
+
+• **Docker** (optional) for containerized deployment.
+
+---
+
 ## 🎯 Why This Project?  
 
 ### 🎭 Uniqueness  

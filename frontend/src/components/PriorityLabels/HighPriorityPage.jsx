@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import ChecklistItem from "../ChecklistItem/ChecklistItem";
 import "../ChecklistPage/ChecklistPage.css";
+import Navbar from "../HomePage/Navbar";
+import toast from "react-hot-toast";
 
-const HighPriorityPage = ({ isDarkMode }) => {
+const HighPriorityPage = ({ isDarkMode, toggleDarkMode }) => {
   const [highPriorityItems, setHighPriorityItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,7 +15,7 @@ const HighPriorityPage = ({ isDarkMode }) => {
 
   // Fetch checklist from backend
   useEffect(() => {
-    fetch("http://localhost:5000/api/checklists/get")
+    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/get`)
       .then((res) => {
         if (!res.ok) {
           throw new Error("Failed to fetch checklist");
@@ -34,7 +36,7 @@ const HighPriorityPage = ({ isDarkMode }) => {
   }, []);
 
   const handleToggleComplete = (id, completed) => {
-    fetch(`http://localhost:5000/api/checklists/update/${id}`, {
+    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/update/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ completed: !completed }),
@@ -49,7 +51,7 @@ const HighPriorityPage = ({ isDarkMode }) => {
   };
 
   const handleSetPriority = (id, priority) => {
-    fetch(`http://localhost:5000/api/checklists/update/${id}`, {
+    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/update/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ priority }),
@@ -70,7 +72,7 @@ const HighPriorityPage = ({ isDarkMode }) => {
   };
 
   const handleDeleteItem = (id) => {
-    fetch(`http://localhost:5000/api/checklists/delete/${id}`, {
+    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/delete/${id}`, {
       method: "DELETE",
     })
       .then(() => {
@@ -87,7 +89,7 @@ const HighPriorityPage = ({ isDarkMode }) => {
   const handleSaveEdit = (id) => {
     if (!editedText.trim()) return;
 
-    fetch(`http://localhost:5000/api/checklists/update/${id}`, {
+    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/update/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: editedText }),
@@ -109,7 +111,8 @@ const HighPriorityPage = ({ isDarkMode }) => {
         isDarkMode ? "bg-gray-950 text-white" : "bg-gray-50 text-gray-900"
       }`}
     >
-      <div className="max-w-4xl mx-auto">
+      <Navbar isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+      <div className="max-w-4xl mx-auto p-8 mt-20">
         <h1 className="text-4xl font-bold text-center mb-10 bg-gradient-to-r from-blue-500 via-purple-600 to-rose-500 bg-clip-text text-transparent">
           High Priority Items
         </h1>
@@ -156,6 +159,7 @@ const HighPriorityPage = ({ isDarkMode }) => {
         <div className="flex justify-center mt-10">
           <Link
             to="/"
+            onClick={() => toast.success("Returning back to Home! 🏠")}
             className="inline-block px-6 py-3 text-white text-lg font-semibold rounded-full bg-gradient-to-r from-blue-500 via-purple-600 to-rose-500 hover:opacity-90 shadow-lg transform hover:scale-105 transition duration-300"
           >
             ⬅️ Back to Home

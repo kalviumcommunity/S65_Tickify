@@ -17,7 +17,7 @@ const Hero = ({ isDarkMode }) => {
       >
         <motion.h1
           className="text-5xl md:text-7xl font-extrabold mb-6 drop-shadow-lg ml-[140px]"
-          animate={{ y: [0, -5, 0] }}
+          animate={{ y: [0, -10, 0] }}
           transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
         >
           Never Forget Again! 🚀

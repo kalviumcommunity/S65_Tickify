@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import LandingPage from "./components/HomePage/LandingPage";
 import ChecklistPage from "./components/ChecklistPage/ChecklistPage";
 import HighPriorityPage from "./components/PriorityLabels/HighPriorityPage";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -15,7 +16,17 @@ function App() {
     localStorage.setItem("darkMode", !isDarkMode);
   };
 
+  // Update body class when dark mode changes
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.classList.add("dark");
+    } else {
+      document.body.classList.remove("dark");
+    }
+  }, [isDarkMode]);
+
   return (
+    <>
     <Routes>
       <Route
         path="/"
@@ -23,12 +34,15 @@ function App() {
       />
       <Route
         path="/checklist"
-        element={<ChecklistPage isDarkMode={isDarkMode} />}
+        element={<ChecklistPage isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />}
       />
-      <Route 
-      path="/high-priority" 
-      element={<HighPriorityPage isDarkMode={isDarkMode}/>} /> 
+      <Route
+        path="/high-priority"
+        element={<HighPriorityPage isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />}
+      />
     </Routes>
+    <Toaster />
+    </>
   );
 }
 

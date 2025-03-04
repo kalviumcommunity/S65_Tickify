@@ -11,7 +11,14 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(express.json());
-app.use(cors()); // Enable CORS for frontend communication
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN, // Allow only the specified frontend
+    credentials: true, // Allow cookies and authentication headers
+    methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
+    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+  })
+); // Enable CORS for frontend communication
 
 // Routes
 app.use("/api/users", userRoutes);

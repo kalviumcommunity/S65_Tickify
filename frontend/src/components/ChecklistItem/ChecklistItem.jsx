@@ -42,7 +42,7 @@ const ChecklistItem = ({
       {/* Content Wrapper (Dynamic background based on isDarkMode) */}
       <div
         className={`w-full flex justify-between items-center p-3 rounded-[16px] ${
-          isDarkMode ? "bg-gray-800 text-white" : "bg-white text-black"
+          isDarkMode ? "bg-gray-800 text-white" : "bg-gray-300 text-black"
         }`}
         style={{
           position: "relative",
