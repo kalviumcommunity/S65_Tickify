@@ -1,0 +1,159 @@
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+
+const SignupPopup = ({ isDarkMode, onClose, onSignupSuccess }) => {
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState("");
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+
+    if (errors[name]) {
+      setErrors({
+        ...errors,
+        [name]: null,
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Invalid email address";
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+    setServerError("");
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BASE_URI}/api/users/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+        credentials: "include",
+      });
+
+      const data = await response.json().catch(() => null);
+      const message = data?.message || (response.ok ? "User created successfully!" : "Registration failed");
+
+      if (response.ok) {
+        toast.success(message);
+        onClose();
+        onSignupSuccess();
+        navigate("/signin");
+      } else {
+        toast.error(message);
+        setServerError(message);
+      }
+    } catch (error) {
+      console.error("Signup error:", error);
+      const errorMessage = "Connection error. Please check your network or try again later.";
+      toast.error(errorMessage);
+      setServerError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSigninClick = (e) => {
+    e.preventDefault();
+    onClose();
+    navigate("/signin");
+  };
+
+  const handleContainerClick = (e) => {
+    if (e.target === e.currentTarget) {
+      e.stopPropagation();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50" onClick={handleContainerClick}>
+      <div className={`p-6 rounded-lg shadow-md w-96 ${isDarkMode ? "bg-gray-800" : "bg-white"}`}>
+        <h2 className={`text-2xl font-bold mb-4 text-center ${isDarkMode ? "text-white" : "text-black"}`}>Sign Up</h2>
+
+        <form onSubmit={handleSubmit}>
+          <label className={`block mt-3 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>Email:</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className={`w-full p-2 border rounded mt-1 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+              isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-black"
+            }`}
+            disabled={isLoading}
+          />
+          {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+
+          <label className={`block mt-3 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>Password:</label>
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            className={`w-full p-2 border rounded mt-1 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+              isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-black"
+            }`}
+            disabled={isLoading}
+          />
+          {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
+
+          {serverError && <p className="text-red-500 text-sm mt-2">{serverError}</p>}
+
+          <button
+            type="submit"
+            className={`w-full p-2 mt-4 rounded transition ${
+              isDarkMode ? "bg-purple-600 text-white hover:bg-purple-700" : "bg-purple-600 text-white hover:bg-purple-700"
+            } ${isLoading ? "opacity-70 cursor-not-allowed" : ""}`}
+            disabled={isLoading}
+          >
+            {isLoading ? "Signing Up..." : "Sign Up"}
+          </button>
+        </form>
+
+        <div className="mt-4 text-center">
+          <p className={`${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+            Already have an account?{" "}
+            <a href="#" onClick={handleSigninClick} className="text-purple-500 hover:underline">
+              Sign In
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SignupPopup;

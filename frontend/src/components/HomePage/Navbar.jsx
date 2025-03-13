@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -24,6 +24,27 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showNewChecklistInput, setShowNewChecklistInput] = useState(false);
   const [newItem, setNewItem] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+
+  useEffect(() => {
+    // Check login status on component mount
+    const loggedInStatus = localStorage.getItem("isLoggedIn") === "true";
+    const email = localStorage.getItem("userEmail");
+
+    setIsLoggedIn(loggedInStatus);
+    if (email) {
+      setUserEmail(email);
+    }
+
+    // Add scroll event listener
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const randomReminders = [
     "Don't forget your keys! 🗝️",
@@ -33,10 +54,22 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
     "Water bottle packed? 💧",
   ];
 
-  const handleSignUp = () => toast.success("Welcome to Tickify! 🎉");
-  const handleSignIn = () => toast.success("Welcome back to Tickify! 😊");
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userEmail");
+    setIsLoggedIn(false);
+    setUserEmail("");
+    toast.success("Logged out successfully!");
+    navigate("/");
+    setIsDropdownOpen(false);
+  };
 
   const handleCreateChecklist = () => {
+    if (!isLoggedIn) {
+      toast.error("Please sign in to create a checklist!");
+      navigate("/signin");
+      return;
+    }
     setShowNewChecklistInput(true);
   };
 
@@ -48,7 +81,7 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
 
     const newItemObj = { text: newItem, completed: false, priority: "low" };
 
-    fetch("http://localhost:5000/api/checklists/add", {
+    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/add`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newItemObj),
@@ -115,7 +148,9 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
             whileTap={{ scale: 0.9 }}
             onClick={toggleDropdown}
             className={`p-2 rounded-full transition ${
-              isDarkMode ? "text-white hover:bg-gray-800" : "text-gray-950 hover:bg-gray-200"
+              isDarkMode
+                ? "text-white hover:bg-gray-800"
+                : "text-gray-950 hover:bg-gray-200"
             }`}
           >
             <Menu className="w-6 h-6" />
@@ -130,6 +165,19 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
               className="absolute left-0 mt-2 w-48 rounded-lg shadow-lg border bg-gray-900 text-white border-gray-700 z-50"
             >
               <ul className="py-2">
+                {isLoggedIn && (
+                  <li className="px-4 py-2 border-b border-gray-700">
+                    <div className="flex items-center">
+                      <User className="w-5 h-5 mr-2 text-purple-400" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {userEmail}
+                        </p>
+                        <p className="text-xs text-gray-400">Logged in</p>
+                      </div>
+                    </div>
+                  </li>
+                )}
                 <li>
                   <a
                     href="#profile"
@@ -154,17 +202,32 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
                     }}
                     className="flex items-center px-4 py-2 hover:bg-gray-800 w-full"
                   >
-                    <List className="w-5 h-5 mr-2 text-gray-400" /> High Priority
+                    <List className="w-5 h-5 mr-2 text-gray-400" /> High
+                    Priority
                   </button>
                 </li>
-                <li>
-                  <a
-                    href="#logout"
-                    className="flex items-center px-4 py-2 hover:bg-gray-800"
-                  >
-                    <LogOut className="w-5 h-5 mr-2 text-gray-400" /> Log Out
-                  </a>
-                </li>
+                {isLoggedIn ? (
+                  <li>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center px-4 py-2 hover:bg-gray-800 w-full"
+                    >
+                      <LogOut className="w-5 h-5 mr-2 text-gray-400" /> Log Out
+                    </button>
+                  </li>
+                ) : (
+                  <li>
+                    <button
+                      onClick={() => {
+                        navigate("/signin");
+                        setIsDropdownOpen(false);
+                      }}
+                      className="flex items-center px-4 py-2 hover:bg-gray-800 w-full"
+                    >
+                      <LogOut className="w-5 h-5 mr-2 text-gray-400" /> Sign In
+                    </button>
+                  </li>
+                )}
               </ul>
             </motion.div>
           )}
@@ -173,6 +236,7 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
         {/* Logo */}
         <motion.h1
           whileHover={{ scale: 1.05 }}
+          onClick={() => navigate("/")}
           className={`app-name text-2xl font-bold cursor-pointer transition ${
             isDarkMode ? "text-white" : "text-gray-950"
           }`}
@@ -193,7 +257,9 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={`w-full px-4 py-2 pl-10 rounded-full border focus:outline-none focus:ring-4 focus:ring-purple-500 ${
-              isDarkMode ? "bg-gray-100 text-gray-950 border-gray-300" : "bg-white text-black border-gray-300"
+              isDarkMode
+                ? "bg-gray-100 text-gray-950 border-gray-300"
+                : "bg-white text-black border-gray-300"
             }`}
           />
           <Search
@@ -230,7 +296,7 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
                 />
                 <motion.button
                   onClick={handleAddItem}
-                  className="px-6 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-300 shadow-lg hover:shadow-xl"
+                  className="px-6 py-3 bg-white/10 text-black rounded-lg hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-300 shadow-lg hover:shadow-xl"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -250,37 +316,63 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
           </>
         )}
 
-        {/* Sign In / Sign Up Buttons */}
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={handleSignIn}
-          className={`font-bold px-6 py-2 rounded-full transition duration-300 border ${
-            isDarkMode ? "bg-gray-800 text-white hover:bg-white hover:text-gray-950" : "bg-white text-gray-950 hover:bg-gray-800 hover:text-white"
-          }`}
-        >
-          Sign In
-        </motion.button>
+        {/* Conditional rendering for Sign In / Sign Up or user profile */}
+        {isLoggedIn ? (
+          <div className="flex items-center">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className={`px-4 py-2 rounded-full flex items-center ${
+                isDarkMode ? "bg-gray-800" : "bg-white"
+              }`}
+            >
+              <User className="w-5 h-5 mr-2 text-purple-500" />
+              <span className="text-sm font-medium truncate max-w-[120px]">
+                {userEmail}
+              </span>
+            </motion.div>
+          </div>
+        ) : (
+          <>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate("/signin")}
+              className={`font-bold px-6 py-2 rounded-full transition duration-300 border ${
+                isDarkMode
+                  ? "bg-gray-800 text-white hover:bg-white hover:text-gray-950"
+                  : "bg-white text-gray-950 hover:bg-gray-800 hover:text-white"
+              }`}
+            >
+              Sign In
+            </motion.button>
 
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={handleSignUp}
-          className="bg-purple-600 text-white font-bold px-6 py-2 rounded-full hover:bg-purple-700 transition duration-300"
-        >
-          Sign Up
-        </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate("/signup")}
+              className="bg-purple-600 text-white font-bold px-6 py-2 rounded-full hover:bg-purple-700 transition duration-300"
+            >
+              Sign Up
+            </motion.button>
+          </>
+        )}
 
         {/* Dark Mode Toggle */}
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          onClick={handleToggleDarkMode} // Use the new handler
+          onClick={handleToggleDarkMode}
           className={`p-2 rounded-full transition ${
-            isDarkMode ? "text-white hover:bg-gray-800" : "text-gray-950 hover:bg-gray-200"
+            isDarkMode
+              ? "text-white hover:bg-gray-800"
+              : "text-gray-950 hover:bg-gray-200"
           }`}
         >
-          {isDarkMode ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
+          {isDarkMode ? (
+            <Sun className="w-6 h-6" />
+          ) : (
+            <Moon className="w-6 h-6" />
+          )}
         </motion.button>
 
         {/* Quick-Access Buttons */}
@@ -288,7 +380,9 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           className={`p-2 rounded-full transition ${
-            isDarkMode ? "text-white hover:bg-gray-800" : "text-gray-950 hover:bg-gray-200"
+            isDarkMode
+              ? "text-white hover:bg-gray-800"
+              : "text-gray-950 hover:bg-gray-200"
           }`}
           onClick={giveRandomReminder}
         >
@@ -300,7 +394,9 @@ const Navbar = ({ isDarkMode, toggleDarkMode }) => {
           whileTap={{ scale: 0.9 }}
           onClick={() => navigate("/high-priority")}
           className={`p-2 rounded-full transition ${
-            isDarkMode ? "text-white hover:bg-gray-800" : "text-gray-950 hover:bg-gray-200"
+            isDarkMode
+              ? "text-white hover:bg-gray-800"
+              : "text-gray-950 hover:bg-gray-200"
           }`}
         >
           <List className="w-6 h-6" /> {/* My Checklists */}
