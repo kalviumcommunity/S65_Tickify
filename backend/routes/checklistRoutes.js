@@ -4,14 +4,15 @@ const {
   addChecklistItem,
   updateChecklistItem,
   deleteChecklistItem,
-} = require("../controllers/checklistController"); // Import Controllers
+  validateChecklist, // Import validation middleware
+} = require("../controllers/checklistController"); 
 
 const router = express.Router();
 
 // Define Routes
-router.get("/get", getChecklistItems); //  GET All
-router.post("/add", addChecklistItem); //  POST New
-router.put("/update/:id", updateChecklistItem); //  PUT Update (Fixed)
-router.delete("/delete/:id", deleteChecklistItem); //  DELETE Item (Fixed)
+router.get("/get", getChecklistItems);
+router.post("/add", validateChecklist, addChecklistItem);
+router.put("/update/:id", validateChecklist, updateChecklistItem);
+router.delete("/delete/:id", deleteChecklistItem);
 
 module.exports = router;

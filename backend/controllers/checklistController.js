@@ -1,4 +1,5 @@
 const Checklist = require("../models/ChecklistModel"); // Import Model
+const { body, validationResult } = require("express-validator");
 
 // Get all checklist items
 const getChecklistItems = async (req, res) => {
@@ -69,10 +70,18 @@ const deleteChecklistItem = async (req, res) => {
   }
 };
 
+
+const validateChecklist = [
+  body("text").notEmpty().withMessage("Text field is required").isString().withMessage("Text must be a string"),
+  body("completed").optional().isBoolean().withMessage("Completed must be a boolean"),
+  body("priority").optional().isIn(["low", "medium", "high"]).withMessage("Priority must be 'low', 'medium', or 'high'"),
+];
+
 //  Export all controllers
 module.exports = {
   getChecklistItems,
   addChecklistItem,
   updateChecklistItem,
   deleteChecklistItem,
+  validateChecklist,
 };
