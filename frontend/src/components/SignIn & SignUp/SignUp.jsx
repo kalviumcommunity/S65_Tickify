@@ -176,13 +176,9 @@ const Signup = ({ isDarkMode, onSignupSuccess }) => {
         <div className="mt-4 text-center">
           <p className={`${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
             Already have an account?{" "}
-            <span
-  className="text-purple-500 cursor-pointer"
-  onClick={() => navigate("/signin")}
->
-  Sign In
-</span>
-
+            <a href="/signin" className="text-purple-500">
+              Sign In
+            </a>
           </p>
         </div>
       </form>
@@ -191,4 +187,3 @@ const Signup = ({ isDarkMode, onSignupSuccess }) => {
 };
 
 export default Signup;
-
