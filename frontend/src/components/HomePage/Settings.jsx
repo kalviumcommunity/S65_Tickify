@@ -1,126 +1,144 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  Settings as SettingsIcon, 
-  User, 
-  Bell, 
-  Moon, 
-  Sun, 
-  Lock, 
-  Trash2, 
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  Settings as SettingsIcon,
+  User,
+  Bell,
+  Moon,
+  Sun,
+  Lock,
+  Trash2,
   Download,
   Upload,
   Shield,
   Eye,
   EyeOff,
   Save,
-  X
-} from 'lucide-react';
-import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+  X,
+} from "lucide-react";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const Settings = ({ isDarkMode, toggleDarkMode }) => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState({
-    email: '',
-    accountName: '',
-    userId: ''
+    email: "",
+    accountName: "",
+    userId: "",
   });
-  const [activeTab, setActiveTab] = useState('account');
+  const [activeTab, setActiveTab] = useState("account");
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
-    confirm: false
+    confirm: false,
   });
 
+  // ✅ Base URL handling for dev/prod
+  const baseUrl =
+    import.meta.env.MODE === "development"
+      ? import.meta.env.VITE_BASE_URI_DEV
+      : import.meta.env.VITE_BASE_URI_PROD;
+
   useEffect(() => {
-    const email = localStorage.getItem('userEmail');
-    const accountName = localStorage.getItem('accountName');
-    const userId = localStorage.getItem('userId');
+    const email = localStorage.getItem("userEmail");
+    const accountName = localStorage.getItem("accountName");
+    const userId = localStorage.getItem("userId");
 
     if (!email) {
-      toast.error('Please sign in to access settings');
-      navigate('/signin');
+      toast.error("Please sign in to access settings");
+      navigate("/signin");
       return;
     }
 
-    setUserData({ email, accountName: accountName || 'Main Account', userId });
+    setUserData({ email, accountName: accountName || "Main Account", userId });
   }, [navigate]);
 
   const handlePasswordChange = async () => {
-    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-      toast.error('All password fields are required!');
+    if (
+      !passwordData.currentPassword ||
+      !passwordData.newPassword ||
+      !passwordData.confirmPassword
+    ) {
+      toast.error("All password fields are required!");
       return;
     }
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error('New passwords do not match!');
+      toast.error("New passwords do not match!");
       return;
     }
 
     if (passwordData.newPassword.length < 6) {
-      toast.error('New password must be at least 6 characters!');
+      toast.error("New password must be at least 6 characters!");
       return;
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_BASE_URI}/api/users/change-password`, {
-        method: 'POST',
+      const response = await fetch(`${baseUrl}/api/users/change-password`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
           email: userData.email,
           currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword
-        })
+          newPassword: passwordData.newPassword,
+        }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        toast.success('Password changed successfully!');
-        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        toast.success("Password changed successfully!");
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
         setShowPasswordChange(false);
       } else {
-        toast.error(data.error || 'Failed to change password');
+        toast.error(data.error || "Failed to change password");
       }
     } catch (error) {
-      toast.error('Error changing password. Please try again.');
+      toast.error("Error changing password. Please try again.");
     }
   };
 
   const handleExportData = () => {
     const allData = {
-      email: localStorage.getItem('userEmail'),
-      accountName: localStorage.getItem('accountName'),
-      taskReminders: localStorage.getItem('tickify_task_reminders'),
-      exportDate: new Date().toISOString()
+      email: localStorage.getItem("userEmail"),
+      accountName: localStorage.getItem("accountName"),
+      taskReminders: localStorage.getItem("tickify_task_reminders"),
+      exportDate: new Date().toISOString(),
     };
 
     const dataStr = JSON.stringify(allData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
     const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
     link.download = `tickify-backup-${Date.now()}.json`;
     link.click();
     URL.revokeObjectURL(url);
 
-    toast.success('Data exported successfully!');
+    toast.success("Data exported successfully!");
   };
 
   const handleClearAllData = () => {
-    if (window.confirm('⚠️ This will clear all your local data including reminders. Are you sure?')) {
-      localStorage.removeItem('tickify_task_reminders');
-      toast.success('Local data cleared!');
+    if (
+      window.confirm(
+        "⚠️ This will clear all your local data including reminders. Are you sure?"
+      )
+    ) {
+      localStorage.removeItem("tickify_task_reminders");
+      toast.success("Local data cleared!");
     }
   };
 
@@ -132,42 +150,46 @@ const Settings = ({ isDarkMode, toggleDarkMode }) => {
     if (!confirmed) return;
 
     const confirmText = prompt('Type "DELETE" to confirm account deletion:');
-    if (confirmText !== 'DELETE') {
-      toast.error('Account deletion cancelled');
+    if (confirmText !== "DELETE") {
+      toast.error("Account deletion cancelled");
       return;
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_BASE_URI}/api/users/delete-account`, {
-        method: 'DELETE',
+      const response = await fetch(`${baseUrl}/api/users/delete-account`, {
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify({ email: userData.email })
+        body: JSON.stringify({ email: userData.email }),
       });
 
       if (response.ok) {
         localStorage.clear();
-        toast.success('Account deleted successfully');
-        navigate('/');
+        toast.success("Account deleted successfully");
+        navigate("/");
       } else {
-        toast.error('Failed to delete account');
+        toast.error("Failed to delete account");
       }
     } catch (error) {
-      toast.error('Error deleting account. Please try again.');
+      toast.error("Error deleting account. Please try again.");
     }
   };
 
   const tabs = [
-    { id: 'account', label: 'Account', icon: User },
-    { id: 'appearance', label: 'Appearance', icon: isDarkMode ? Moon : Sun },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'privacy', label: 'Privacy & Data', icon: Shield }
+    { id: "account", label: "Account", icon: User },
+    { id: "appearance", label: "Appearance", icon: isDarkMode ? Moon : Sun },
+    { id: "notifications", label: "Notifications", icon: Bell },
+    { id: "privacy", label: "Privacy & Data", icon: Shield },
   ];
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-950' : 'bg-gray-50'} pt-24 px-4 pb-12`}>
+    <div
+      className={`min-h-screen ${
+        isDarkMode ? "bg-gray-950" : "bg-gray-50"
+      } pt-24 px-4 pb-12`}
+    >
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <motion.div
@@ -176,12 +198,24 @@ const Settings = ({ isDarkMode, toggleDarkMode }) => {
           className="mb-8"
         >
           <div className="flex items-center gap-3 mb-2">
-            <SettingsIcon className={`w-8 h-8 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
-            <h1 className={`text-4xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <SettingsIcon
+              className={`w-8 h-8 ${
+                isDarkMode ? "text-purple-400" : "text-purple-600"
+              }`}
+            />
+            <h1
+              className={`text-4xl font-bold ${
+                isDarkMode ? "text-white" : "text-gray-900"
+              }`}
+            >
               Settings
             </h1>
           </div>
-          <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p
+            className={`text-lg ${
+              isDarkMode ? "text-gray-400" : "text-gray-600"
+            }`}
+          >
             Manage your account and preferences
           </p>
         </motion.div>
@@ -193,7 +227,11 @@ const Settings = ({ isDarkMode, toggleDarkMode }) => {
             animate={{ opacity: 1, x: 0 }}
             className="lg:col-span-1"
           >
-            <div className={`${isDarkMode ? 'bg-gray-900' : 'bg-white'} rounded-2xl p-4 shadow-lg`}>
+            <div
+              className={`${
+                isDarkMode ? "bg-gray-900" : "bg-white"
+              } rounded-2xl p-4 shadow-lg`}
+            >
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
@@ -202,10 +240,10 @@ const Settings = ({ isDarkMode, toggleDarkMode }) => {
                     onClick={() => setActiveTab(tab.id)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all ${
                       activeTab === tab.id
-                        ? 'bg-purple-600 text-white'
+                        ? "bg-purple-600 text-white"
                         : isDarkMode
-                        ? 'text-gray-300 hover:bg-gray-800'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? "text-gray-300 hover:bg-gray-800"
+                        : "text-gray-700 hover:bg-gray-100"
                     }`}
                   >
                     <Icon size={20} />
@@ -222,17 +260,29 @@ const Settings = ({ isDarkMode, toggleDarkMode }) => {
             animate={{ opacity: 1, x: 0 }}
             className="lg:col-span-3"
           >
-            <div className={`${isDarkMode ? 'bg-gray-900' : 'bg-white'} rounded-2xl p-8 shadow-lg`}>
+            <div
+              className={`${
+                isDarkMode ? "bg-gray-900" : "bg-white"
+              } rounded-2xl p-8 shadow-lg`}
+            >
               {/* Account Tab */}
-              {activeTab === 'account' && (
+              {activeTab === "account" && (
                 <div className="space-y-6">
-                  <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  <h2
+                    className={`text-2xl font-bold ${
+                      isDarkMode ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     Account Information
                   </h2>
 
                   <div className="space-y-4">
                     <div>
-                      <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <label
+                        className={`block text-sm font-medium mb-2 ${
+                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                        }`}
+                      >
                         Email Address
                       </label>
                       <input
@@ -240,13 +290,19 @@ const Settings = ({ isDarkMode, toggleDarkMode }) => {
                         value={userData.email}
                         disabled
                         className={`w-full px-4 py-3 rounded-lg ${
-                          isDarkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-600'
+                          isDarkMode
+                            ? "bg-gray-800 text-gray-400"
+                            : "bg-gray-100 text-gray-600"
                         } cursor-not-allowed`}
                       />
                     </div>
 
                     <div>
-                      <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <label
+                        className={`block text-sm font-medium mb-2 ${
+                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                        }`}
+                      >
                         Account Name
                       </label>
                       <input
@@ -254,14 +310,18 @@ const Settings = ({ isDarkMode, toggleDarkMode }) => {
                         value={userData.accountName}
                         disabled
                         className={`w-full px-4 py-3 rounded-lg ${
-                          isDarkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-600'
+                          isDarkMode
+                            ? "bg-gray-800 text-gray-400"
+                            : "bg-gray-100 text-gray-600"
                         } cursor-not-allowed`}
                       />
                     </div>
 
                     <div className="pt-4 border-t border-gray-700">
                       <button
-                        onClick={() => setShowPasswordChange(!showPasswordChange)}
+                        onClick={() =>
+                          setShowPasswordChange(!showPasswordChange)
+                        }
                         className="flex items-center gap-2 px-4 py-2 text-white transition bg-purple-600 rounded-lg hover:bg-purple-700"
                       >
                         <Lock size={18} />
@@ -271,74 +331,138 @@ const Settings = ({ isDarkMode, toggleDarkMode }) => {
                       {showPasswordChange && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
+                          animate={{ opacity: 1, height: "auto" }}
                           className="mt-4 space-y-4"
                         >
                           <div>
-                            <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            <label
+                              className={`block text-sm font-medium mb-2 ${
+                                isDarkMode ? "text-gray-300" : "text-gray-700"
+                              }`}
+                            >
                               Current Password
                             </label>
                             <div className="relative">
                               <input
-                                type={showPasswords.current ? 'text' : 'password'}
+                                type={
+                                  showPasswords.current ? "text" : "password"
+                                }
                                 value={passwordData.currentPassword}
-                                onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                                onChange={(e) =>
+                                  setPasswordData({
+                                    ...passwordData,
+                                    currentPassword: e.target.value,
+                                  })
+                                }
                                 className={`w-full px-4 py-3 rounded-lg ${
-                                  isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'
+                                  isDarkMode
+                                    ? "bg-gray-800 text-white"
+                                    : "bg-gray-100 text-gray-900"
                                 }`}
                               />
                               <button
                                 type="button"
-                                onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                                onClick={() =>
+                                  setShowPasswords({
+                                    ...showPasswords,
+                                    current: !showPasswords.current,
+                                  })
+                                }
                                 className="absolute transform -translate-y-1/2 right-3 top-1/2"
                               >
-                                {showPasswords.current ? <EyeOff size={20} /> : <Eye size={20} />}
+                                {showPasswords.current ? (
+                                  <EyeOff size={20} />
+                                ) : (
+                                  <Eye size={20} />
+                                )}
                               </button>
                             </div>
                           </div>
 
                           <div>
-                            <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            <label
+                              className={`block text-sm font-medium mb-2 ${
+                                isDarkMode ? "text-gray-300" : "text-gray-700"
+                              }`}
+                            >
                               New Password
                             </label>
                             <div className="relative">
                               <input
-                                type={showPasswords.new ? 'text' : 'password'}
+                                type={showPasswords.new ? "text" : "password"}
                                 value={passwordData.newPassword}
-                                onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                onChange={(e) =>
+                                  setPasswordData({
+                                    ...passwordData,
+                                    newPassword: e.target.value,
+                                  })
+                                }
                                 className={`w-full px-4 py-3 rounded-lg ${
-                                  isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'
+                                  isDarkMode
+                                    ? "bg-gray-800 text-white"
+                                    : "bg-gray-100 text-gray-900"
                                 }`}
                               />
                               <button
                                 type="button"
-                                onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
+                                onClick={() =>
+                                  setShowPasswords({
+                                    ...showPasswords,
+                                    new: !showPasswords.new,
+                                  })
+                                }
                                 className="absolute transform -translate-y-1/2 right-3 top-1/2"
                               >
-                                {showPasswords.new ? <EyeOff size={20} /> : <Eye size={20} />}
+                                {showPasswords.new ? (
+                                  <EyeOff size={20} />
+                                ) : (
+                                  <Eye size={20} />
+                                )}
                               </button>
                             </div>
                           </div>
 
                           <div>
-                            <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            <label
+                              className={`block text-sm font-medium mb-2 ${
+                                isDarkMode ? "text-gray-300" : "text-gray-700"
+                              }`}
+                            >
                               Confirm New Password
                             </label>
                             <div className="relative">
                               <input
-                                type={showPasswords.confirm ? 'text' : 'password'}
+                                type={
+                                  showPasswords.confirm ? "text" : "password"
+                                }
                                 value={passwordData.confirmPassword}
-                                onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                                onChange={(e) =>
+                                  setPasswordData({
+                                    ...passwordData,
+                                    confirmPassword: e.target.value,
+                                  })
+                                }
                                 className={`w-full px-4 py-3 rounded-lg ${
-                                  isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'
+                                  isDarkMode
+                                    ? "bg-gray-800 text-white"
+                                    : "bg-gray-100 text-gray-900"
                                 }`}
                               />
                               <button
                                 type="button"
-                                onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
+                                onClick={() =>
+                                  setShowPasswords({
+                                    ...showPasswords,
+                                    confirm: !showPasswords.confirm,
+                                  })
+                                }
                                 className="absolute transform -translate-y-1/2 right-3 top-1/2"
                               >
-                                {showPasswords.confirm ? <EyeOff size={20} /> : <Eye size={20} />}
+                                {showPasswords.confirm ? (
+                                  <EyeOff size={20} />
+                                ) : (
+                                  <Eye size={20} />
+                                )}
                               </button>
                             </div>
                           </div>
@@ -354,7 +478,11 @@ const Settings = ({ isDarkMode, toggleDarkMode }) => {
                             <button
                               onClick={() => {
                                 setShowPasswordChange(false);
-                                setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                                setPasswordData({
+                                  currentPassword: "",
+                                  newPassword: "",
+                                  confirmPassword: "",
+                                });
                               }}
                               className="flex items-center gap-2 px-4 py-2 text-white transition bg-gray-600 rounded-lg hover:bg-gray-700"
                             >
@@ -370,34 +498,48 @@ const Settings = ({ isDarkMode, toggleDarkMode }) => {
               )}
 
               {/* Appearance Tab */}
-              {activeTab === 'appearance' && (
+              {activeTab === "appearance" && (
                 <div className="space-y-6">
-                  <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  <h2
+                    className={`text-2xl font-bold ${
+                      isDarkMode ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     Appearance
                   </h2>
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-4 rounded-lg bg-gray-800/50">
                       <div>
-                        <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        <h3
+                          className={`font-semibold ${
+                            isDarkMode ? "text-white" : "text-gray-900"
+                          }`}
+                        >
                           Dark Mode
                         </h3>
-                        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        <p
+                          className={`text-sm ${
+                            isDarkMode ? "text-gray-400" : "text-gray-600"
+                          }`}
+                        >
                           Toggle between light and dark themes
                         </p>
                       </div>
                       <button
                         onClick={() => {
                           toggleDarkMode();
-                          toast.success(`Switched to ${isDarkMode ? 'Light' : 'Dark'} Mode!`);
+                          toast.success(
+                            `Switched to ${isDarkMode ? "Light" : "Dark"} Mode!`
+                          );
                         }}
                         className={`relative inline-flex h-12 w-20 items-center rounded-full transition ${
-                          isDarkMode ? 'bg-purple-600' : 'bg-gray-300'
+                          isDarkMode ? "bg-purple-600" : "bg-gray-300"
                         }`}
                       >
                         <span
                           className={`inline-block h-8 w-8 transform rounded-full bg-white transition ${
-                            isDarkMode ? 'translate-x-10' : 'translate-x-2'
+                            isDarkMode ? "translate-x-10" : "translate-x-2"
                           }`}
                         />
                       </button>
@@ -407,22 +549,39 @@ const Settings = ({ isDarkMode, toggleDarkMode }) => {
               )}
 
               {/* Notifications Tab */}
-              {activeTab === 'notifications' && (
+              {activeTab === "notifications" && (
                 <div className="space-y-6">
-                  <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  <h2
+                    className={`text-2xl font-bold ${
+                      isDarkMode ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     Notification Settings
                   </h2>
 
                   <div className="space-y-4">
-                    <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                      <h3 className={`font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    <div
+                      className={`p-4 rounded-lg ${
+                        isDarkMode ? "bg-gray-800" : "bg-gray-100"
+                      }`}
+                    >
+                      <h3
+                        className={`font-semibold mb-2 ${
+                          isDarkMode ? "text-white" : "text-gray-900"
+                        }`}
+                      >
                         Browser Notifications
                       </h3>
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                        Manage notification permissions in your checklist page using the System Alarms card.
+                      <p
+                        className={`text-sm ${
+                          isDarkMode ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
+                        Manage notification permissions in your checklist page
+                        using the System Alarms card.
                       </p>
                       <button
-                        onClick={() => navigate('/checklist')}
+                        onClick={() => navigate("/checklist")}
                         className="px-4 py-2 mt-3 text-white transition bg-purple-600 rounded-lg hover:bg-purple-700"
                       >
                         Go to Checklist
@@ -433,9 +592,13 @@ const Settings = ({ isDarkMode, toggleDarkMode }) => {
               )}
 
               {/* Privacy & Data Tab */}
-              {activeTab === 'privacy' && (
+              {activeTab === "privacy" && (
                 <div className="space-y-6">
-                  <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  <h2
+                    className={`text-2xl font-bold ${
+                      isDarkMode ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     Privacy & Data
                   </h2>
 
@@ -447,7 +610,9 @@ const Settings = ({ isDarkMode, toggleDarkMode }) => {
                       <Download size={20} />
                       <div className="text-left">
                         <h3 className="font-semibold">Export Your Data</h3>
-                        <p className="text-sm opacity-90">Download all your data as JSON</p>
+                        <p className="text-sm opacity-90">
+                          Download all your data as JSON
+                        </p>
                       </div>
                     </button>
 
@@ -458,7 +623,9 @@ const Settings = ({ isDarkMode, toggleDarkMode }) => {
                       <Trash2 size={20} />
                       <div className="text-left">
                         <h3 className="font-semibold">Clear Local Data</h3>
-                        <p className="text-sm opacity-90">Remove all reminders and cached data</p>
+                        <p className="text-sm opacity-90">
+                          Remove all reminders and cached data
+                        </p>
                       </div>
                     </button>
 
@@ -469,7 +636,9 @@ const Settings = ({ isDarkMode, toggleDarkMode }) => {
                       <Trash2 size={20} />
                       <div className="text-left">
                         <h3 className="font-semibold">Delete Account</h3>
-                        <p className="text-sm opacity-90">Permanently delete your account and all data</p>
+                        <p className="text-sm opacity-90">
+                          Permanently delete your account and all data
+                        </p>
                       </div>
                     </button>
                   </div>
