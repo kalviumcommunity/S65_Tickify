@@ -13,9 +13,15 @@ const HighPriorityPage = ({ isDarkMode, toggleDarkMode }) => {
   const [editingItemId, setEditingItemId] = useState(null);
   const [editedText, setEditedText] = useState("");
 
+  // ✅ Base URL handling for dev/prod
+  const baseUrl =
+    import.meta.env.MODE === "development"
+      ? import.meta.env.VITE_BASE_URI_DEV
+      : import.meta.env.VITE_BASE_URI_PROD;
+
   // Fetch checklist from backend
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/get`)
+    fetch(`${baseUrl}/api/checklists/get`)
       .then((res) => {
         if (!res.ok) {
           throw new Error("Failed to fetch checklist");
@@ -36,7 +42,7 @@ const HighPriorityPage = ({ isDarkMode, toggleDarkMode }) => {
   }, []);
 
   const handleToggleComplete = (id, completed) => {
-    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/update/${id}`, {
+    fetch(`${baseUrl}/api/checklists/update/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ completed: !completed }),
@@ -51,7 +57,7 @@ const HighPriorityPage = ({ isDarkMode, toggleDarkMode }) => {
   };
 
   const handleSetPriority = (id, priority) => {
-    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/update/${id}`, {
+    fetch(`${baseUrl}/api/checklists/update/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ priority }),
@@ -60,7 +66,9 @@ const HighPriorityPage = ({ isDarkMode, toggleDarkMode }) => {
       .then((updatedItem) => {
         // If the priority is changed to "low", remove the item from the list
         if (priority === "low") {
-          setHighPriorityItems((prev) => prev.filter((item) => item._id !== id));
+          setHighPriorityItems((prev) =>
+            prev.filter((item) => item._id !== id)
+          );
         } else {
           // Otherwise, update the item in the list
           setHighPriorityItems((prev) =>
@@ -72,7 +80,7 @@ const HighPriorityPage = ({ isDarkMode, toggleDarkMode }) => {
   };
 
   const handleDeleteItem = (id) => {
-    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/delete/${id}`, {
+    fetch(`${baseUrl}/api/checklists/delete/${id}`, {
       method: "DELETE",
     })
       .then(() => {
@@ -89,7 +97,7 @@ const HighPriorityPage = ({ isDarkMode, toggleDarkMode }) => {
   const handleSaveEdit = (id) => {
     if (!editedText.trim()) return;
 
-    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/update/${id}`, {
+    fetch(`${baseUrl}/api/checklists/update/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: editedText }),
@@ -112,16 +120,18 @@ const HighPriorityPage = ({ isDarkMode, toggleDarkMode }) => {
       }`}
     >
       <Navbar isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
-      <div className="max-w-4xl mx-auto p-8 mt-20">
-        <h1 className="text-4xl font-bold text-center mb-10 bg-gradient-to-r from-blue-500 via-purple-600 to-rose-500 bg-clip-text text-transparent">
+      <div className="max-w-4xl p-8 mx-auto mt-20">
+        <h1 className="mb-10 text-4xl font-bold text-center text-transparent bg-gradient-to-r from-blue-500 via-purple-600 to-rose-500 bg-clip-text">
           High Priority Items
         </h1>
 
         {/* Loading and Error Handling */}
         {loading && (
-          <p className="text-center text-lg mb-8">Loading high priority items... ⏳</p>
+          <p className="mb-8 text-lg text-center">
+            Loading high priority items... ⏳
+          </p>
         )}
-        {error && <p className="text-center text-red-500 mb-8">{error}</p>}
+        {error && <p className="mb-8 text-center text-red-500">{error}</p>}
 
         {/* High Priority Items */}
         {!loading && !error && highPriorityItems.length > 0 ? (
@@ -150,8 +160,11 @@ const HighPriorityPage = ({ isDarkMode, toggleDarkMode }) => {
             ))}
           </motion.div>
         ) : (
-          !loading && !error && (
-            <p className="text-center text-lg mb-8">No high priority items found.</p>
+          !loading &&
+          !error && (
+            <p className="mb-8 text-lg text-center">
+              No high priority items found.
+            </p>
           )
         )}
 
@@ -160,7 +173,7 @@ const HighPriorityPage = ({ isDarkMode, toggleDarkMode }) => {
           <Link
             to="/"
             onClick={() => toast.success("Returning back to Home! 🏠")}
-            className="inline-block px-6 py-3 text-white text-lg font-semibold rounded-full bg-gradient-to-r from-blue-500 via-purple-600 to-rose-500 hover:opacity-90 shadow-lg transform hover:scale-105 transition duration-300"
+            className="inline-block px-6 py-3 text-lg font-semibold text-white transition duration-300 transform rounded-full shadow-lg bg-gradient-to-r from-blue-500 via-purple-600 to-rose-500 hover:opacity-90 hover:scale-105"
           >
             ⬅️ Back to Home
           </Link>

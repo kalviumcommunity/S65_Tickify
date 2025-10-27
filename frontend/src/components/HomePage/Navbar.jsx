@@ -17,11 +17,16 @@ import {
   ChevronDown,
 } from "react-feather";
 import "./logoName.css";
-import NotificationCenter from './NotificationCenter';
-import { addNotification } from '../../utils/notificationHelper';
+import NotificationCenter from "./NotificationCenter";
+import { addNotification } from "../../utils/notificationHelper";
 
 // ⭐ UPDATED: Added onSearchChange prop
-const Navbar = ({ isDarkMode, toggleDarkMode, onUserSelect, onSearchChange }) => {
+const Navbar = ({
+  isDarkMode,
+  toggleDarkMode,
+  onUserSelect,
+  onSearchChange,
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -48,6 +53,12 @@ const Navbar = ({ isDarkMode, toggleDarkMode, onUserSelect, onSearchChange }) =>
     confirmPassword: "",
   });
 
+  // ✅ Base URL handling for dev/prod
+  const baseUrl =
+    import.meta.env.MODE === "development"
+      ? import.meta.env.VITE_BASE_URI_DEV
+      : import.meta.env.VITE_BASE_URI_PROD;
+
   // ⭐ NEW: Autocomplete states
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -55,9 +66,9 @@ const Navbar = ({ isDarkMode, toggleDarkMode, onUserSelect, onSearchChange }) =>
 
   // Helper function to extract clean username from email
   const getUsernameFromEmail = (email) => {
-    if (!email) return 'User';
-    const username = email.split('@')[0];
-    const cleanUsername = username.replace(/[^a-zA-Z]/g, '');
+    if (!email) return "User";
+    const username = email.split("@")[0];
+    const cleanUsername = username.replace(/[^a-zA-Z]/g, "");
     return cleanUsername.charAt(0).toUpperCase() + cleanUsername.slice(1);
   };
 
@@ -103,7 +114,9 @@ const Navbar = ({ isDarkMode, toggleDarkMode, onUserSelect, onSearchChange }) =>
     const fetchAllTasks = () => {
       // For guest users
       if (!isLoggedIn) {
-        const guestTasks = JSON.parse(localStorage.getItem("guestTasks") || "[]");
+        const guestTasks = JSON.parse(
+          localStorage.getItem("guestTasks") || "[]"
+        );
         setAllTasks(guestTasks);
         return;
       }
@@ -111,7 +124,7 @@ const Navbar = ({ isDarkMode, toggleDarkMode, onUserSelect, onSearchChange }) =>
       // For logged-in users
       const userId = localStorage.getItem("userId");
       if (userId) {
-        fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/user/${userId}`)
+        fetch(`${baseUrl}/api/checklists/user/${userId}`)
           .then((res) => res.json())
           .then((data) => setAllTasks(data))
           .catch((err) => console.error("Error fetching tasks:", err));
@@ -130,7 +143,8 @@ const Navbar = ({ isDarkMode, toggleDarkMode, onUserSelect, onSearchChange }) =>
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_BASE_URI}/api/users/accounts?email=${userData.email}`,
+        `${baseUrl}/api/users/accounts?email=${userData.email}`,
+
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -192,7 +206,8 @@ const Navbar = ({ isDarkMode, toggleDarkMode, onUserSelect, onSearchChange }) =>
       }
 
       const createResponse = await fetch(
-        `${import.meta.env.VITE_BASE_URI}/api/users/accounts`,
+        `${baseUrl}/api/users/accounts`,
+
         {
           method: "POST",
           headers: {
@@ -272,7 +287,8 @@ const Navbar = ({ isDarkMode, toggleDarkMode, onUserSelect, onSearchChange }) =>
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_BASE_URI}/api/users/verify`,
+        `${baseUrl}/api/users/verify`,
+
         {
           method: "POST",
           headers: {
@@ -401,27 +417,23 @@ const Navbar = ({ isDarkMode, toggleDarkMode, onUserSelect, onSearchChange }) =>
 
     // For guest users - save to localStorage
     if (!isLoggedIn) {
-      const guestTasks = JSON.parse(localStorage.getItem('guestTasks') || '[]');
+      const guestTasks = JSON.parse(localStorage.getItem("guestTasks") || "[]");
       const newGuestTask = {
         _id: Date.now().toString(),
         text: newItem,
         completed: false,
         priority: "low",
         created_by: "guest",
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
-      
+
       guestTasks.push(newGuestTask);
-      localStorage.setItem('guestTasks', JSON.stringify(guestTasks));
-      
+      localStorage.setItem("guestTasks", JSON.stringify(guestTasks));
+
       toast.success("Task added! Sign up to save permanently! 🚀");
-      
-      addNotification(
-        'Task Added (Guest)',
-        `Task: "${newItem}"`,
-        'info'
-      );
-      
+
+      addNotification("Task Added (Guest)", `Task: "${newItem}"`, "info");
+
       setNewItem("");
       setShowNewChecklistInput(false);
       navigate("/checklist");
@@ -436,7 +448,7 @@ const Navbar = ({ isDarkMode, toggleDarkMode, onUserSelect, onSearchChange }) =>
       created_by: userData.userId,
     };
 
-    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/add`, {
+    fetch(`${baseUrl}/api/checklists/add`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newItemObj),
@@ -444,13 +456,9 @@ const Navbar = ({ isDarkMode, toggleDarkMode, onUserSelect, onSearchChange }) =>
       .then((res) => res.json())
       .then((data) => {
         toast.success("Checklist Added! Stay on track! 🚀");
-        
-        addNotification(
-          'New Task Added',
-          `Task: "${newItem}"`,
-          'info'
-        );
-        
+
+        addNotification("New Task Added", `Task: "${newItem}"`, "info");
+
         setNewItem("");
         setShowNewChecklistInput(false);
         navigate("/checklist");
@@ -482,9 +490,7 @@ const Navbar = ({ isDarkMode, toggleDarkMode, onUserSelect, onSearchChange }) =>
     // Show suggestions if there's input
     if (value.trim()) {
       const filtered = allTasks
-        .filter((task) =>
-          task.text.toLowerCase().includes(value.toLowerCase())
-        )
+        .filter((task) => task.text.toLowerCase().includes(value.toLowerCase()))
         .slice(0, 5); // Limit to 5 suggestions
       setSearchSuggestions(filtered);
       setShowSuggestions(true);
@@ -503,15 +509,15 @@ const Navbar = ({ isDarkMode, toggleDarkMode, onUserSelect, onSearchChange }) =>
   const handleSuggestionClick = (suggestion) => {
     setSearchQuery(suggestion.text);
     setShowSuggestions(false);
-    
+
     if (location.pathname !== "/checklist") {
       navigate("/checklist");
     }
-    
+
     if (onSearchChange) {
       onSearchChange(suggestion.text);
     }
-    
+
     toast.success(`Searching for: ${suggestion.text}`);
   };
 
@@ -725,7 +731,9 @@ const Navbar = ({ isDarkMode, toggleDarkMode, onUserSelect, onSearchChange }) =>
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               className={`absolute top-full left-0 right-0 mt-2 rounded-lg shadow-2xl overflow-hidden z-50 ${
-                isDarkMode ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-200"
+                isDarkMode
+                  ? "bg-gray-800 border border-gray-700"
+                  : "bg-white border border-gray-200"
               }`}
             >
               {searchSuggestions.map((suggestion, index) => (
@@ -737,18 +745,30 @@ const Navbar = ({ isDarkMode, toggleDarkMode, onUserSelect, onSearchChange }) =>
                     isDarkMode
                       ? "hover:bg-gray-700 text-white"
                       : "hover:bg-gray-100 text-gray-900"
-                  } ${index !== 0 ? (isDarkMode ? "border-t border-gray-700" : "border-t border-gray-200") : ""}`}
+                  } ${
+                    index !== 0
+                      ? isDarkMode
+                        ? "border-t border-gray-700"
+                        : "border-t border-gray-200"
+                      : ""
+                  }`}
                 >
                   <Search className="flex-shrink-0 w-4 h-4 text-gray-400" />
                   <span className="flex-1 truncate">{suggestion.text}</span>
                   {suggestion.priority === "high" && (
-                    <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">High</span>
+                    <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">
+                      High
+                    </span>
                   )}
                   {suggestion.priority === "medium" && (
-                    <span className="px-2 py-1 text-xs text-white bg-yellow-500 rounded">Med</span>
+                    <span className="px-2 py-1 text-xs text-white bg-yellow-500 rounded">
+                      Med
+                    </span>
                   )}
                   {suggestion.completed && (
-                    <span className="px-2 py-1 text-xs text-white bg-green-500 rounded">✓</span>
+                    <span className="px-2 py-1 text-xs text-white bg-green-500 rounded">
+                      ✓
+                    </span>
                   )}
                 </button>
               ))}

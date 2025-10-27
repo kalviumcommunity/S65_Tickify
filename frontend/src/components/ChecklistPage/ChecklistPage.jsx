@@ -27,6 +27,11 @@ const ChecklistPage = ({ isDarkMode, toggleDarkMode, searchQuery = "", setSearch
 
   const userId = authState.userId;
   const userEmail = authState.userEmail;
+  // ✅ Base URL handling for dev/prod
+const baseUrl =
+  import.meta.env.MODE === "development"
+    ? import.meta.env.VITE_BASE_URI_DEV
+    : import.meta.env.VITE_BASE_URI_PROD;
 
   // ⭐ FIXED: Load guest tasks or fetch from database
   useEffect(() => {
@@ -43,7 +48,7 @@ const ChecklistPage = ({ isDarkMode, toggleDarkMode, searchQuery = "", setSearch
     console.log("Fetching checklist for user:", userId);
     setLoading(true);
 
-    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/user/${userId}`)
+    fetch(`${baseUrl}/api/checklists/user/${userId}`)
       .then((res) => {
         if (!res.ok)
           throw new Error(`Failed to fetch checklist: ${res.status}`);
@@ -112,7 +117,7 @@ const ChecklistPage = ({ isDarkMode, toggleDarkMode, searchQuery = "", setSearch
       created_by: userId,
     };
 
-    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/add`, {
+    fetch(`${baseUrl}/api/checklists/add`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -171,8 +176,7 @@ const ChecklistPage = ({ isDarkMode, toggleDarkMode, searchQuery = "", setSearch
     }
 
     // For logged-in users
-    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/update/${id}`, {
-      method: "PUT",
+fetch(`${baseUrl}/api/checklists/update/${id}`, {      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ completed: !completed, created_by: userId }),
     })
@@ -219,8 +223,7 @@ const ChecklistPage = ({ isDarkMode, toggleDarkMode, searchQuery = "", setSearch
     }
 
     // For logged-in users
-    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/update/${id}`, {
-      method: "PUT",
+fetch(`${baseUrl}/api/checklists/update/${id}`, {      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ priority: newPriority, created_by: userId }),
     })
@@ -252,8 +255,7 @@ const ChecklistPage = ({ isDarkMode, toggleDarkMode, searchQuery = "", setSearch
       return;
     }
 
-    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/delete/${id}`, {
-      method: "DELETE",
+fetch(`${baseUrl}/api/checklists/delete/${id}`, {      method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ created_by: userId }),
     })
@@ -298,8 +300,7 @@ const ChecklistPage = ({ isDarkMode, toggleDarkMode, searchQuery = "", setSearch
       return;
     }
 
-    fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/update/${id}`, {
-      method: "PUT",
+fetch(`${baseUrl}/api/checklists/update/${id}`, {      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: editedText, created_by: userId }),
     })
@@ -343,8 +344,7 @@ const ChecklistPage = ({ isDarkMode, toggleDarkMode, searchQuery = "", setSearch
         created_by: userId,
       };
 
-      fetch(`${import.meta.env.VITE_BASE_URI}/api/checklists/add`, {
-        method: "POST",
+fetch(`${baseUrl}/api/checklists/add`, {        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
