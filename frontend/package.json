@@ -13,6 +13,7 @@
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "framer-motion": "^12.4.3",
+    "lucide-react": "^0.546.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-feather": "^2.0.10",
