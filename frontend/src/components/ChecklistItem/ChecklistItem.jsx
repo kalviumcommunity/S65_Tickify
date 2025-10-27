@@ -1,6 +1,6 @@
-import React from "react";
-import { motion } from "framer-motion";
-import { CheckCircle, Circle, Trash2, Edit, Save } from "react-feather";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle, Circle, Trash2, Edit, Save, ChevronDown } from "react-feather";
 
 const ChecklistItem = ({
   item,
@@ -14,81 +14,78 @@ const ChecklistItem = ({
   onTextChange,
   onSaveEdit,
 }) => {
+  const [showPriorityMenu, setShowPriorityMenu] = useState(false);
+
+  // Priority configuration
+  const priorityOptions = [
+    { value: 'low', label: 'Low', emoji: '🟢', color: 'text-green-500' },
+    { value: 'medium', label: 'Medium', emoji: '🟡', color: 'text-yellow-500' },
+    { value: 'high', label: 'High', emoji: '🔴', color: 'text-red-500' }
+  ];
+
+  const currentPriority = priorityOptions.find(p => p.value === (item.priority || 'low')) || priorityOptions[0];
+
   return (
     <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -100 }}
       whileHover={{ scale: 1.02 }}
-      className="relative p-4 flex justify-between items-center shadow-md transition-all duration-300"
+      className="relative p-1 mb-4 rounded-2xl" // ⭐ Removed overflow-hidden
       style={{
-        position: "relative",
-        borderRadius: "16px", // Consistent border-radius
-        overflow: "hidden", // Ensures border-radius applies correctly
+        background:
+          item.completed
+            ? "linear-gradient(135deg, #10b981, #14b8a6, #06b6d4)"
+            : item.priority === "high"
+            ? "linear-gradient(135deg, #ef4444, #f43f5e, #ec4899)"
+            : item.priority === "medium"
+            ? "linear-gradient(135deg, #f59e0b, #f97316, #fb923c)"
+            : "linear-gradient(135deg, #8b5cf6, #a855f7, #d946ef)",
+        zIndex: showPriorityMenu ? 100 : 1, // ⭐ Higher z-index when menu is open
       }}
     >
-      {/* Gradient Border (Pseudo-element method) */}
+      {/* Content Wrapper */}
       <div
-        style={{
-          content: '""',
-          position: "absolute",
-          inset: 0,
-          padding: "0px", // Matches border width
-          borderRadius: "inherit", // Inherits the border-radius
-          background: "linear-gradient(to right, #3b82f6, #9333ea, #f43f5e)",
-          zIndex: -1,
-          maskImage: "linear-gradient(white, white)", // Ensures background-clip works properly
-          WebkitMaskImage: "linear-gradient(white, white)",
-        }}
-      />
-
-      {/* Content Wrapper (Dynamic background based on isDarkMode) */}
-      <div
-        className={`w-full flex justify-between items-center p-3 rounded-[16px] ${
-          isDarkMode ? "bg-gray-800 text-white" : "bg-gray-300 text-black"
+        className={`relative flex items-center gap-4 p-4 rounded-xl ${
+          isDarkMode ? "bg-gray-900" : "bg-white"
         }`}
-        style={{
-          position: "relative",
-          zIndex: 1,
-        }}
       >
         {/* ✅ Circular Tick Button */}
-        <button
-          className={`w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 ${
-            item.completed ? "bg-green-500 text-white" : "bg-gray-200"
-          }`}
+        <motion.button
+          whileHover={{ scale: 1.2, rotate: 10 }}
+          whileTap={{ scale: 0.9 }}
           onClick={onToggleComplete}
+          className="flex-shrink-0"
         >
-          {item.completed ? <CheckCircle size={26} /> : <Circle size={26} />}
-        </button>
+          {item.completed ? (
+            <CheckCircle className="w-8 h-8 text-green-500" />
+          ) : (
+            <Circle className="w-8 h-8 text-gray-400" />
+          )}
+        </motion.button>
 
         {/* Item Text or Edit Input */}
-        <div className="flex-grow ml-4">
-          {" "}
-          {/* Added margin-left for spacing */}
+        <div className="flex-1 ml-2">
           {isEditing ? (
-            <div
-              className="p-2 border-2 transition-all duration-300"
-              style={{
-                borderRadius: "16px", // Matching outer border-radius
-                border: "2px solid #3b82f6", // Border color
-                background: isDarkMode ? "gray-800" : "white",
-              }}
-            >
-              <input
-                type="text"
-                value={editedText}
-                onChange={onTextChange}
-                className={`w-full p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ${
-                  isDarkMode ? "bg-gray-800 text-white" : "bg-white text-black"
-                }`}
-                style={{
-                  borderRadius: "16px", // Matching inner input border-radius
-                  border: "none", // Remove default input border
-                }}
-              />
-            </div>
+            <input
+              type="text"
+              value={editedText}
+              onChange={onTextChange}
+              className={`w-full px-3 py-2 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                isDarkMode
+                  ? "bg-gray-800 text-white border-gray-600"
+                  : "bg-gray-50 text-gray-900 border-gray-300"
+              }`}
+              autoFocus
+            />
           ) : (
             <span
-              className={`text-lg font-medium transition-all duration-300 ${
-                item.completed ? "line-through text-gray-500" : ""
+              className={`text-lg font-medium ${
+                item.completed
+                  ? "line-through opacity-60"
+                  : isDarkMode
+                  ? "text-white"
+                  : "text-gray-900"
               }`}
             >
               {item.text}
@@ -98,44 +95,102 @@ const ChecklistItem = ({
 
         {/* Icons Section */}
         <div className="flex items-center gap-3">
-          {/* ⭐ Priority Button */}
-          <button
-            className={`text-2xl transition-all duration-300 ${
-              item.priority === "high" ? "text-yellow-500" : "text-gray-400"
-            }`}
-            onClick={onSetPriority}
-          >
-            {item.priority === "high" ? "⭐" : "☆"}
-          </button>
+          {/* ⭐ Priority Dropdown */}
+          <div className="relative" style={{ zIndex: showPriorityMenu ? 200 : 10 }}> {/* ⭐ Super high z-index */}
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setShowPriorityMenu(!showPriorityMenu)}
+              className={`flex items-center gap-1 px-3 py-2 rounded-lg transition ${
+                isDarkMode
+                  ? "bg-gray-800 hover:bg-gray-700"
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}
+            >
+              <span className="text-xl">{currentPriority.emoji}</span>
+              <span className={`text-sm font-semibold ${currentPriority.color}`}>
+                {currentPriority.label}
+              </span>
+              <ChevronDown className="w-4 h-4" />
+            </motion.button>
+
+            {/* Priority Menu - ⭐ FIXED POSITIONING */}
+            <AnimatePresence>
+              {showPriorityMenu && (
+                <>
+                  {/* Invisible backdrop to close menu when clicking outside */}
+                  <div
+                    className="fixed inset-0"
+                    style={{ zIndex: 150 }}
+                    onClick={() => setShowPriorityMenu(false)}
+                  />
+                  
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className={`absolute right-0 mt-2 w-40 rounded-lg shadow-2xl ${
+                      isDarkMode ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-200"
+                    }`}
+                    style={{ zIndex: 200 }} // ⭐ Very high z-index
+                  >
+                    {priorityOptions.map((priority) => (
+                      <button
+                        key={priority.value}
+                        onClick={() => {
+                          onSetPriority(priority.value);
+                          setShowPriorityMenu(false);
+                        }}
+                        className={`w-full flex items-center gap-2 px-4 py-3 text-left transition first:rounded-t-lg last:rounded-b-lg ${
+                          item.priority === priority.value
+                            ? isDarkMode
+                              ? "bg-gray-700"
+                              : "bg-gray-100"
+                            : isDarkMode
+                            ? "hover:bg-gray-700"
+                            : "hover:bg-gray-50"
+                        }`}
+                      >
+                        <span className="text-xl">{priority.emoji}</span>
+                        <span className={`font-semibold ${priority.color}`}>
+                          {priority.label}
+                        </span>
+                      </button>
+                    ))}
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* 🗑️ Delete Button */}
           <motion.button
-            whileHover={{ scale: 1.2, rotate: -10 }}
+            whileHover={{ scale: 1.1, rotate: 10 }}
             whileTap={{ scale: 0.9 }}
-            className="text-red-500 hover:text-red-700 transition-all"
             onClick={onDelete}
+            className="text-red-500 hover:text-red-600"
           >
-            <Trash2 size={24} />
+            <Trash2 className="w-6 h-6" />
           </motion.button>
 
-          {/* ✏️ Edit Button */}
+          {/* ✏️ Edit/Save Button */}
           {isEditing ? (
             <motion.button
-              whileHover={{ scale: 1.2 }}
+              whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="text-green-500 hover:text-green-700 transition-all"
               onClick={onSaveEdit}
+              className="text-green-500 hover:text-green-600"
             >
-              <Save size={24} />
+              <Save className="w-6 h-6" />
             </motion.button>
           ) : (
             <motion.button
-              whileHover={{ scale: 1.2 }}
+              whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="text-blue-500 hover:text-blue-700 transition-all"
               onClick={onEdit}
+              className="text-blue-500 hover:text-blue-600"
             >
-              <Edit size={24} />
+              <Edit className="w-6 h-6" />
             </motion.button>
           )}
         </div>

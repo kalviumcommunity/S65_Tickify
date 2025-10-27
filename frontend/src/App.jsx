@@ -1,20 +1,35 @@
-import { useState, useEffect } from "react";
-import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
+import { useState, useEffect, createContext } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import LandingPage from "./components/HomePage/LandingPage";
 import ChecklistPage from "./components/ChecklistPage/ChecklistPage";
 import HighPriorityPage from "./components/PriorityLabels/HighPriorityPage";
 import Signin from "./components/SignIn & SignUp/SignIn";
 import Signup from "./components/SignIn & SignUp/SignUp";
-import SignupPopup from "./components/SignIn & SignUp/SignupPopup";
 import { Toaster } from "react-hot-toast";
+import Settings from "./components/HomePage/Settings";
+import Profile from "./components/HomePage/Profile";
+import About from "./components/About";
+
+// Create auth context to share user state across components
+export const AuthContext = createContext();
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem("darkMode") === "true";
   });
 
-  const [showSignupPopup, setShowSignupPopup] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Enhanced auth state with userId to detect user changes
+  const [authState, setAuthState] = useState(() => {
+    return {
+      isAuthenticated: localStorage.getItem("isLoggedIn") === "true",
+      userId: localStorage.getItem("userId") || null,
+      userEmail: localStorage.getItem("userEmail") || null,
+    };
+  });
+
+  // ⭐ NEW: Search state for filtering tasks
+  const [searchQuery, setSearchQuery] = useState("");
+
   const navigate = useNavigate();
 
   // Toggle dark mode
@@ -33,94 +48,56 @@ function App() {
     }
   }, [isDarkMode]);
 
-  // Check authentication status on component mount
-  useEffect(() => {
-    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-    console.log("[App] Checking auth status:", isLoggedIn);
-
-    if (isLoggedIn) {
-      setIsAuthenticated(true);
-      setShowSignupPopup(false);
-    } else {
-      setIsAuthenticated(false);
-      const currentPath = window.location.pathname;
-      if (currentPath !== "/signin" && currentPath !== "/signup") {
-        setShowSignupPopup(true);
-      }
-    }
-  }, []);
-
-  // Handle signup success
-  const handleSignupSuccess = () => {
-    console.log("[App] Signup successful");
+  // Handle signup success with all user data
+  const handleSignupSuccess = (userId, userEmail) => {
+    console.log("[App] Signup successful", userId);
     localStorage.setItem("isLoggedIn", "true");
-    setIsAuthenticated(true);
-    setShowSignupPopup(false);
+    localStorage.setItem("userId", userId);
+    localStorage.setItem("userEmail", userEmail);
+
+    setAuthState({
+      isAuthenticated: true,
+      userId: userId,
+      userEmail: userEmail,
+    });
+
     navigate("/");
   };
 
-  // Handle signin success
-  const handleSigninSuccess = () => {
-    console.log("[App] Signin successful");
+  // Handle signin success with all user data
+  const handleSigninSuccess = (userId, userEmail) => {
+    console.log("[App] Signin successful", userId);
     localStorage.setItem("isLoggedIn", "true");
-    setIsAuthenticated(true);
-    setShowSignupPopup(false);
+    localStorage.setItem("userId", userId);
+    localStorage.setItem("userEmail", userEmail);
+
+    setAuthState({
+      isAuthenticated: true,
+      userId: userId,
+      userEmail: userEmail,
+    });
+
     navigate("/");
   };
 
-  // Handle sign out
+  // Handle sign out with complete state reset
   const handleSignOut = () => {
     console.log("[App] Signing out user");
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("userEmail");
-    setIsAuthenticated(false);
-    const currentPath = window.location.pathname;
-    if (currentPath === "/") {
-      setShowSignupPopup(true);
-    }
+    localStorage.removeItem("userId");
+
+    setAuthState({
+      isAuthenticated: false,
+      userId: null,
+      userEmail: null,
+    });
+
     navigate("/");
   };
 
-  // Protected route component
-  const ProtectedRoute = ({ children }) => {
-    useEffect(() => {
-      if (!isAuthenticated) {
-        console.log("[App] Access to protected route attempted. Redirecting to signin.");
-        navigate("/signin");
-      }
-    }, [isAuthenticated, navigate]);
-
-    return isAuthenticated ? children : null;
-  };
-
-  // Listen for route changes to manage popup visibility
-  useEffect(() => {
-    const handleRouteChange = () => {
-      const currentPath = window.location.pathname;
-      if (currentPath === "/signin" || currentPath === "/signup") {
-        setShowSignupPopup(false);
-      } else if (currentPath === "/" && !isAuthenticated) {
-        setShowSignupPopup(true);
-      }
-    };
-
-    handleRouteChange();
-    window.addEventListener("popstate", handleRouteChange);
-    return () => {
-      window.removeEventListener("popstate", handleRouteChange);
-    };
-  }, [isAuthenticated]);
-
   return (
-    <>
-      {showSignupPopup && !isAuthenticated && (
-        <SignupPopup
-          isDarkMode={isDarkMode}
-          onClose={() => setShowSignupPopup(false)}
-          onSignupSuccess={handleSignupSuccess}
-        />
-      )}
-
+    <AuthContext.Provider value={{ authState, setAuthState }}>
       <Routes>
         <Route
           path="/"
@@ -128,47 +105,69 @@ function App() {
             <LandingPage
               isDarkMode={isDarkMode}
               toggleDarkMode={toggleDarkMode}
-              isAuthenticated={isAuthenticated}
+              isAuthenticated={authState.isAuthenticated}
               onSignOut={handleSignOut}
+              searchQuery={searchQuery} // ⭐ NEW
+              setSearchQuery={setSearchQuery} // ⭐ NEW
             />
           }
         />
         <Route
           path="/checklist"
           element={
-            <ProtectedRoute>
-              <ChecklistPage
-                isDarkMode={isDarkMode}
-                toggleDarkMode={toggleDarkMode}
-                isAuthenticated={isAuthenticated}
-              />
-            </ProtectedRoute>
+            <ChecklistPage
+              isDarkMode={isDarkMode}
+              toggleDarkMode={toggleDarkMode}
+              authState={authState}
+              searchQuery={searchQuery} // ⭐ NEW
+              setSearchQuery={setSearchQuery} // ⭐ NEW
+            />
           }
         />
         <Route
           path="/high-priority"
           element={
-            <ProtectedRoute>
-              <HighPriorityPage
-                isDarkMode={isDarkMode}
-                toggleDarkMode={toggleDarkMode}
-                isAuthenticated={isAuthenticated}
-              />
-            </ProtectedRoute>
+            <HighPriorityPage
+              isDarkMode={isDarkMode}
+              toggleDarkMode={toggleDarkMode}
+              authState={authState}
+              searchQuery={searchQuery} // ⭐ NEW
+              setSearchQuery={setSearchQuery} // ⭐ NEW
+            />
           }
         />
         <Route
           path="/signin"
-          element={<Signin isDarkMode={isDarkMode} onSigninSuccess={handleSigninSuccess} />}
+          element={
+            <Signin
+              isDarkMode={isDarkMode}
+              onSigninSuccess={handleSigninSuccess}
+            />
+          }
         />
         <Route
           path="/signup"
-          element={<Signup isDarkMode={isDarkMode} onSignupSuccess={handleSignupSuccess} />}
+          element={
+            <Signup
+              isDarkMode={isDarkMode}
+              onSignupSuccess={handleSignupSuccess}
+            />
+          }
         />
+
+        <Route
+          path="/settings"
+          element={
+            <Settings isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+          }
+        />
+        <Route path="/profile" element={<Profile isDarkMode={isDarkMode} />} />
+
+        <Route path="/about" element={<About isDarkMode={isDarkMode} />} />
       </Routes>
 
       <Toaster />
-    </>
+    </AuthContext.Provider>
   );
 }
 
