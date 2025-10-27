@@ -3,12 +3,12 @@ const cors = require("cors");
 const helmet = require("helmet"); // Security middleware
 const rateLimit = require("express-rate-limit"); // Rate limiting
 const connectDB = require("./config/db");
+const mongoose = require("mongoose"); // ✅ Added: for health check database status
 require("dotenv").config();
 
 const userRoutes = require("./routes/userRoute");
 const checklistRoutes = require("./routes/checklistRoutes");
-const newsletterRoutes = require('./routes/newsletterRoutes');
-
+const newsletterRoutes = require("./routes/newsletterRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -42,7 +42,16 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/checklists", checklistRoutes);
-app.use('/api/newsletter', newsletterRoutes);
+app.use("/api/newsletter", newsletterRoutes);
+
+// ✅ Root Route (for Render testing)
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "✅ Tickify backend is live and running on Render!",
+    routes: ["/api/users", "/api/checklists", "/api/newsletter", "/api/health"]
+  });
+});
 
 // Health Check Endpoint
 app.get("/api/health", (req, res) => {
