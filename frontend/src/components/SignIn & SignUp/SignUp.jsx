@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { Link } from "react-router-dom";
 
 const Signup = ({ isDarkMode, onSignupSuccess }) => {
   const [formData, setFormData] = useState({
@@ -174,11 +175,11 @@ const Signup = ({ isDarkMode, onSignupSuccess }) => {
         </button>
 
         <div className="mt-4 text-center">
-          <p className={`${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+          <p className="text-sm text-center">
             Already have an account?{" "}
-            <a href="/signin" className="text-purple-500">
+            <Link to="/signin" className="text-blue-500 hover:underline">
               Sign In
-            </a>
+            </Link>
           </p>
         </div>
       </form>
